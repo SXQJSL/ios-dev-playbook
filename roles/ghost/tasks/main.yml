@@ -1,69 +1,30 @@
 ---
 
-- name: create ghost folder
-  file: path=/usr/local/ghost state=directory
-  tags:
-    - ghost
-    - directory
+- name: ghost
+  docker:
+    name: ghost
+    state: started
+    image: ghost
+    volumes:
+      - "/usr/local/ghost:/var/lib/ghost"
+    ports:
+      - "2368:2368"
 
-- name: download ghost package
-  get_url: url=https://github.com/TryGhost/Ghost/releases/download/{{ ghost_version }}/Ghost-{{ ghost_version }}.zip dest=/tmp/ghost-{{ ghost_version }}.zip
-  tags:
-    - ghost
-    - download
+# - name: install ghostium theme
+#   git: repo=https://github.com/oswaldoacauan/ghostium/ dest=/usr/local/ghost/content/themes/ghostium
+#   tags:
+#     - ghost
+#     - ghostium
 
-- name: install unzip
-  apt: pkg=unzip state=present
-  tags:
-    - ghost
-    - unzip
+# - name: install ghostwriter theme
+#   git: repo=https://github.com/roryg/ghostwriter.git dest=/usr/local/ghost/content/themes/ghostwriter
+#   tags:
+#     - ghost
+#     - ghostwriter
 
-- name: unzip ghost package
-  unarchive: src=/tmp/ghost-{{ ghost_version }}.zip dest=/usr/local/ghost copy=no
-  tags:
-    - ghost
-    - unarchive
+# - name: install GhostScroll theme
+#   git: repo=https://github.com/grmmph/GhostScroll.git dest=/usr/local/ghost/content/themes/GhostScroll
+#   tags:
+#     - ghost
+#     - GhostScroll
 
-- name: install node packages
-  npm: path=/usr/local/ghost production=yes
-  tags:
-    - ghost
-    - packages
-
-- name: create default config
-  template: src=config.js.j2 dest=/usr/local/ghost/config.js
-  tags:
-    - ghost
-    - config
-
-- name: add supervisor config
-  template: src=ghost.conf.j2 dest=/etc/supervisor/conf.d/ghost.conf
-  tags:
-    - ghost
-    - supervisor
-  notify:
-    - reload supervisor
-
-- name: install ghostium theme
-  git: repo=https://github.com/oswaldoacauan/ghostium/ dest=/usr/local/ghost/content/themes/ghostium
-  tags:
-    - ghost
-    - ghostium
-
-- name: install ghostwriter theme
-  git: repo=https://github.com/roryg/ghostwriter.git dest=/usr/local/ghost/content/themes/ghostwriter
-  tags:
-    - ghost
-    - ghostwriter
-
-- name: install GhostScroll theme
-  git: repo=https://github.com/grmmph/GhostScroll.git dest=/usr/local/ghost/content/themes/GhostScroll
-  tags:
-    - ghost
-    - GhostScroll
-
-- name: restart ghost
-  action: supervisorctl name=ghost state=restarted
-  tags:
-    - ghost
-    - restart
